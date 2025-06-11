@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novvi Properties | AI-Powered Content Strategy Dashboard</title>
+    <!-- Chosen Palette: Warm Neutrals with Gold Accent -->
+    <!-- Application Structure Plan: A dashboard-style SPA. The structure begins with high-level objectives, then allows interactive exploration of target audiences through a selector. The core content strategy is organized into clean, clickable tabs for each pillar. A doughnut chart visualizes the content mix, and an interactive timeline presents the 6-month roadmap. This structure was chosen to transform a static document into an engaging, explorable tool. It allows users (management) to get a quick overview and then dive into specific areas of interest (like a particular audience or content pillar) without linear scrolling, making the complex strategy more digestible and memorable. Gemini API features are added to generate content ideas and email subjects, making the dashboard an actionable tool. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Target Audiences -> Goal: Compare/Inform -> Viz: Interactive Card Selector -> Interaction: Click a card to show details + "Generate Email Subjects" button -> Justification: More engaging than a static list, highlights tailored approach, adds AI utility -> Library: JS, Gemini API.
+        - Report Info: Content Pillars -> Goal: Organize -> Viz: Tabbed Interface -> Interaction: Click a tab to reveal themes + "Generate Content Ideas" button -> Justification: Organizes dense information cleanly, adds AI brainstorming -> Library: JS, Gemini API.
+        - Report Info: Content Formats -> Goal: Inform Proportions -> Viz: Doughnut Chart -> Interaction: Hover to see details -> Justification: Quick visual summary of the content mix -> Library: Chart.js (Canvas).
+        - Report Info: 6-Month Roadmap -> Goal: Show Change/Organize -> Viz: Interactive Timeline Diagram -> Interaction: Click phase to see details -> Justification: Turns a list into a visual project plan -> Library: JS/HTML/CSS.
+        - Report Info: KPIs -> Goal: Inform -> Viz: Grouped Cards -> Interaction: Static -> Justification: Clear, scannable success metrics -> Library: HTML/CSS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700&display=swap');
+        .font-playfair {
+            font-family: 'Playfair Display', serif;
+        }
+        .tab-active {
+            border-color: #D4AF37;
+            color: #D4AF37;
+            background-color: #fdfaf5;
+        }
+        .timeline-item-active > div:first-child {
+            background-color: #D4AF37;
+            color: #ffffff;
+        }
+        .timeline-item-active > div:last-child {
+            border-color: #D4AF37;
+        }
+        .audience-card-active {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(212, 175, 55, 0.2), 0 4px 6px -2px rgba(212, 175, 55, 0.1);
+            border-color: #D4AF37;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .gemini-btn {
+            background-color: #2A3D45;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .gemini-btn:hover {
+            background-color: #D4AF37;
+        }
+        .gemini-btn:disabled {
+            background-color: #9CA3AF;
+            cursor: not-allowed;
+        }
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #D4AF37;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-[#FBF9F6] text-[#333]">
+
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-12">
+            <h1 class="font-playfair text-4xl md:text-5xl font-bold text-[#2A3D45]">Novvi Properties</h1>
+            <p class="mt-2 text-lg text-[#6B7280]">AI-Powered Content Strategy Dashboard</p>
+        </header>
+
+        <main>
+            <section id="objectives" class="mb-16">
+                <h2 class="font-playfair text-3xl text-center mb-2 font-bold">Strategic Objectives</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">This 6-month strategy is designed to achieve four core business goals, establishing Novvi Properties as a market leader. The following cards summarize the key pillars of our mission.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex items-center mb-3">
+                            <span class="text-3xl mr-4">🎯</span>
+                            <h3 class="text-xl font-bold text-[#2A3D45]">Lead Generation</h3>
+                        </div>
+                        <p class="text-gray-600">Create conversion-optimized content to capture prospect information and nurture them through the sales funnel.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex items-center mb-3">
+                            <span class="text-3xl mr-4">🏆</span>
+                            <h3 class="text-xl font-bold text-[#2A3D45]">Brand Authority</h3>
+                        </div>
+                        <p class="text-gray-600">Position Novvi Properties as the premier expert in Dubai luxury real estate through thought leadership.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex items-center mb-3">
+                            <span class="text-3xl mr-4">🚀</span>
+                            <h3 class="text-xl font-bold text-[#2A3D45]">SEO Improvement</h3>
+                        </div>
+                        <p class="text-gray-600">Enhance organic visibility to attract high-intent buyers and investors actively searching online.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex items-center mb-3">
+                            <span class="text-3xl mr-4">🤝</span>
+                            <h3 class="text-xl font-bold text-[#2A3D45]">Audience Engagement</h3>
+                        </div>
+                        <p class="text-gray-600">Build meaningful connections with our target segments through relevant, high-value content.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="audience" class="mb-16">
+                <h2 class="font-playfair text-3xl text-center mb-2 font-bold">Target Audience Explorer</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Our success hinges on understanding the unique needs of our clients. This section details the four key audience segments we will target. Click on each card to explore their specific motivations and challenges.</p>
+                <div class="lg:flex gap-8">
+                    <div class="lg:w-1/3 grid grid-cols-2 lg:grid-cols-1 gap-4 mb-8 lg:mb-0">
+                        <div id="audience-btn-1" class="audience-card audience-card-active p-4 bg-white rounded-lg shadow-sm border-2 border-transparent cursor-pointer transition-all duration-300">
+                            <h4 class="font-bold text-lg text-[#2A3D45]">Luxury Buyers</h4>
+                            <p class="text-sm text-gray-500">High-net-worth individuals.</p>
+                        </div>
+                        <div id="audience-btn-2" class="audience-card p-4 bg-white rounded-lg shadow-sm border-2 border-transparent cursor-pointer transition-all duration-300">
+                            <h4 class="font-bold text-lg text-[#2A3D45]">Investors</h4>
+                            <p class="text-sm text-gray-500">Seeking returns and growth.</p>
+                        </div>
+                        <div id="audience-btn-3" class="audience-card p-4 bg-white rounded-lg shadow-sm border-2 border-transparent cursor-pointer transition-all duration-300">
+                            <h4 class="font-bold text-lg text-[#2A3D45]">Expats</h4>
+                            <p class="text-sm text-gray-500">Professionals relocating to Dubai.</p>
+                        </div>
+                        <div id="audience-btn-4" class="audience-card p-4 bg-white rounded-lg shadow-sm border-2 border-transparent cursor-pointer transition-all duration-300">
+                            <h4 class="font-bold text-lg text-[#2A3D45]">Business Professionals</h4>
+                            <p class="text-sm text-gray-500">Executives and entrepreneurs.</p>
+                        </div>
+                    </div>
+                    <div class="lg:w-2/3 bg-white p-6 rounded-lg shadow-lg">
+                        <div id="audience-details"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="content-pillars" class="mb-16">
+                <h2 class="font-playfair text-3xl text-center mb-2 font-bold">Content Strategy Hub</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Our content is built on four key pillars, each designed to address the specific interests of our audience. Use the tabs below to navigate through the core themes of our strategy.</p>
+                <div class="flex flex-wrap justify-center border-b-2 border-gray-200 mb-6">
+                    <button class="tab-btn py-2 px-6 font-semibold text-gray-500 border-b-4 border-transparent transition-colors duration-300 tab-active" data-tab="1">Market Intelligence</button>
+                    <button class="tab-btn py-2 px-6 font-semibold text-gray-500 border-b-4 border-transparent transition-colors duration-300" data-tab="2">Luxury Lifestyle</button>
+                    <button class="tab-btn py-2 px-6 font-semibold text-gray-500 border-b-4 border-transparent transition-colors duration-300" data-tab="3">Investor Resources</button>
+                    <button class="tab-btn py-2 px-6 font-semibold text-gray-500 border-b-4 border-transparent transition-colors duration-300" data-tab="4">Buyer Guides</button>
+                </div>
+                <div id="tab-content" class="bg-white p-6 rounded-lg shadow-md min-h-[250px]"></div>
+            </section>
+            
+            <section id="gemini-content-generator" class="mb-16 text-center">
+                <h2 class="font-playfair text-3xl text-center mb-2 font-bold">AI Content Idea Generator</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Spark your creativity. Based on the selected content pillar above, use our AI assistant to generate fresh content ideas, blog post titles, and angles to explore.</p>
+                <button id="generate-content-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">✨ Generate Content Ideas</button>
+                <div id="content-ideas-output" class="mt-8 p-6 bg-white rounded-lg shadow-md text-left hidden"></div>
+            </section>
+
+            <section id="content-mix" class="mb-16">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="font-playfair text-3xl mb-2 font-bold">A Diverse Content Mix</h2>
+                        <p class="text-gray-600 mb-4">To keep our audience engaged, we will deploy a variety of content formats. This approach allows us to cater to different learning and consumption preferences, from deep-dive analysis to quick visual updates. The chart opposite visualizes the planned distribution of our content efforts.</p>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2">
+                           <li><b>Written Content:</b> In-depth articles, blogs, and guides to establish authority.</li>
+                           <li><b>Visual Content:</b> High-resolution photography, virtual tours, and infographics to showcase properties and data.</li>
+                           <li><b>Interactive Content:</b> Calculators and tools to generate leads and provide direct value.</li>
+                           <li><b>Video Content:</b> Property tours and expert interviews to create a dynamic connection.</li>
+                        </ul>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="contentMixChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="timeline" class="mb-16">
+                <h2 class="font-playfair text-3xl text-center mb-2 font-bold">6-Month Strategic Roadmap</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Our strategy will be implemented in three distinct phases over six months. This roadmap ensures a structured rollout from foundation-building to optimization and growth. Click each phase to see the key initiatives.</p>
+                <div class="relative">
+                    <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gray-300 -translate-y-1/2"></div>
+                    <div class="relative grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        <div id="timeline-item-1" class="timeline-item timeline-item-active cursor-pointer">
+                            <div class="mx-auto w-12 h-12 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold text-lg mb-3 transition-colors duration-300">1</div>
+                            <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-gray-300 transition-colors duration-300">
+                                <h4 class="font-bold">Months 1-2</h4>
+                                <p class="text-sm text-gray-500">Foundation Building</p>
+                            </div>
+                        </div>
+                        <div id="timeline-item-2" class="timeline-item cursor-pointer">
+                           <div class="mx-auto w-12 h-12 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold text-lg mb-3 transition-colors duration-300">2</div>
+                           <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-gray-300 transition-colors duration-300">
+                                <h4 class="font-bold">Months 3-4</h4>
+                                <p class="text-sm text-gray-500">Expansion & Engagement</p>
+                            </div>
+                        </div>
+                        <div id="timeline-item-3" class="timeline-item cursor-pointer">
+                           <div class="mx-auto w-12 h-12 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold text-lg mb-3 transition-colors duration-300">3</div>
+                            <div class="bg-white p-4 rounded-lg shadow-md border-t-4 border-gray-300 transition-colors duration-300">
+                                <h4 class="font-bold">Months 5-6</h4>
+                                <p class="text-sm text-gray-500">Optimization & Growth</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="timeline-details" class="mt-8 bg-white p-6 rounded-lg shadow-lg"></div>
+            </section>
+
+            <section id="kpis" class="mb-16">
+                 <h2 class="font-playfair text-3xl text-center mb-2 font-bold">Measuring Our Success</h2>
+                 <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">To ensure accountability and continuous improvement, we will track a comprehensive set of Key Performance Indicators (KPIs). These metrics will provide insights into our performance across traffic, engagement, lead generation, and SEO.</p>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="font-bold text-lg text-[#2A3D45] mb-2">Traffic Metrics</h4>
+                        <ul class="space-y-1 text-gray-600">
+                           <li>Unique visitors</li>
+                           <li>Page views</li>
+                           <li>Time on site</li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="font-bold text-lg text-[#2A3D45] mb-2">Engagement Metrics</h4>
+                        <ul class="space-y-1 text-gray-600">
+                           <li>Scroll depth</li>
+                           <li>Comments & Social shares</li>
+                           <li>Downloads</li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h4 class="font-bold text-lg text-[#2A3D45] mb-2">Lead & SEO Metrics</h4>
+                        <ul class="space-y-1 text-gray-600">
+                           <li>Conversion rate</li>
+                           <li>Form submissions</li>
+                           <li>Organic rankings</li>
+                           <li>Backlinks</li>
+                        </ul>
+                    </div>
+                 </div>
+            </section>
+        </main>
+
+        <footer class="text-center pt-8 border-t border-gray-200">
+            <p class="text-gray-500">Novvi Properties | Strategic Dashboard | &copy; 2025</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const audienceData = {
+            "1": {
+                title: "Luxury Buyers",
+                details: [
+                    { label: "Demographics", value: "High-net-worth individuals, typically 35-65 years old." },
+                    { label: "Interests", value: "Exclusive properties, premium amenities, and unique lifestyle benefits." },
+                    { label: "Pain Points", value: "Finding truly distinctive properties, ensuring privacy, and gaining exclusive access to listings." }
+                ]
+            },
+            "2": {
+                title: "Investors",
+                details: [
+                    { label: "Demographics", value: "Individual and institutional investors seeking high ROI." },
+                    { label: "Interests", value: "Market trends, investment opportunities, rental yields, and capital appreciation." },
+                    { label: "Pain Points", value: "Concerns about market stability, navigating regulatory changes, and identifying high-growth areas." }
+                ]
+            },
+            "3": {
+                title: "Expats",
+                details: [
+                    { label: "Demographics", value: "Professionals relocating to Dubai, typically 30-55 years old." },
+                    { label: "Interests", value: "Area guides, relocation advice, and understanding property regulations for non-citizens." },
+                    { label: "Pain Points", value: "Understanding the local market, navigating a new purchase process, and finding suitable neighborhoods." }
+                ]
+            },
+            "4": {
+                title: "Business Professionals",
+                details: [
+                    { label: "Demographics", value: "C-suite executives, entrepreneurs, and business owners." },
+                    { label: "Interests", value: "Commercial opportunities, dedicated work-from-home spaces, and proximity to business districts." },
+                    { label: "Pain Points", value: "Balancing work and lifestyle needs, ensuring good connectivity, and finding prestigious locations." }
+                ]
+            },
+        };
+
+        const pillarData = {
+            "1": {
+                title: "Pillar 1: Dubai Market Intelligence",
+                themes: [
+                    { title: "Data-Driven Insights", points: ["Monthly market reports with price trends", "Quarterly investment outlook reports", "Annual Dubai real estate forecast"] },
+                    { title: "Market Opportunities", points: ["Emerging neighborhood spotlights", "Off-plan investment guides", "Rental yield comparisons"] }
+                ]
+            },
+            "2": {
+                title: "Pillar 2: Luxury Lifestyle",
+                themes: [
+                    { title: "Dubai Living", points: ["Neighborhood guides for premium areas", "School and education guides for families", "Dining and entertainment recommendations"] },
+                    { title: "Property Showcases", points: ["Featured property stories", "Architectural highlights and interior design trends", "Smart home and technology features"] }
+                ]
+            },
+            "3": {
+                title: "Pillar 3: Investor Resources",
+                themes: [
+                    { title: "Investment Strategies", points: ["Beginner's guide to Dubai real estate", "Portfolio diversification strategies", "Financing options for international buyers"] },
+                    { title: "Market Analysis", points: ["Dubai vs. global investment destinations", "Regulatory updates and implications", "Economic factors affecting the market"] }
+                ]
+            },
+            "4": {
+                title: "Pillar 4: Buyer Guides",
+                themes: [
+                    { title: "Purchase Process", points: ["Step-by-step buying guides for international clients", "Legal considerations for property purchase", "Property inspection checklists"] },
+                    { title: "Relocation Resources", points: ["Comprehensive expat moving guides", "Visa and residency information", "Community integration tips"] }
+                ]
+            }
+        };
+
+        const timelineData = {
+            "1": {
+                title: "Phase 1: Foundation Building (Months 1-2)",
+                points: [
+                    "Launch cornerstone content for each of the four pillars.",
+                    "Create targeted lead magnets (e.g., downloadable guides) for each audience segment.",
+                    "Establish regular content series like 'Market Monday' and 'Property Spotlight'.",
+                    "Develop and optimize key landing pages for lead capture."
+                ]
+            },
+            "2": {
+                title: "Phase 2: Expansion & Engagement (Months 3-4)",
+                points: [
+                    "Increase the frequency of content production across all formats.",
+                    "Introduce interactive tools like an ROI calculator and neighborhood comparison tool.",
+                    "Begin email nurture sequences for all captured leads.",
+                    "Launch a video content series featuring property tours and expert interviews."
+                ]
+            },
+            "3": {
+                title: "Phase 3: Optimization & Growth (Months 5-6)",
+                points: [
+                    "Analyze performance data from the first four months to refine the strategy.",
+                    "Expand content categories that are performing well and driving engagement.",
+                    "Develop advanced lead nurturing pathways based on user behavior.",
+                    "Introduce opportunities for user-generated content, such as testimonials or social media campaigns."
+                ]
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            let activePillarTitle = pillarData["1"].title;
+            let activeAudienceData = audienceData["1"];
+
+            async function callGeminiAPI(prompt) {
+                loadingOverlay.classList.remove('hidden');
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }]
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API call failed with status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                        return result.candidates[0].content.parts[0].text;
+                    } else {
+                        console.error("Unexpected API response structure:", result);
+                        return "Sorry, I couldn't generate ideas at this moment. The response from the AI was unexpected.";
+                    }
+
+                } catch (error) {
+                    console.error('Error calling Gemini API:', error);
+                    return "Sorry, there was an error connecting to the AI assistant. Please try again later.";
+                } finally {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+            
+            const audienceDetailsContainer = document.getElementById('audience-details');
+            const audienceButtons = document.querySelectorAll('.audience-card');
+
+            function updateAudienceDetails(id) {
+                activeAudienceData = audienceData[id];
+                let html = `<h3 class="font-playfair text-2xl font-bold mb-4 text-[#2A3D45]">${activeAudienceData.title}</h3>`;
+                html += '<div class="space-y-4">';
+                activeAudienceData.details.forEach(detail => {
+                    html += `<div><h5 class="font-semibold text-gray-700">${detail.label}</h5><p class="text-gray-600">${detail.value}</p></div>`;
+                });
+                html += '</div>';
+                html += `<div class="mt-6">
+                            <button id="generate-subjects-btn" class="gemini-btn w-full font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">✨ Suggest Email Subject Lines</button>
+                            <div id="subject-lines-output" class="mt-4 p-4 bg-gray-50 rounded-lg text-left hidden"></div>
+                         </div>`;
+                audienceDetailsContainer.innerHTML = html;
+
+                document.getElementById('generate-subjects-btn').addEventListener('click', handleGenerateSubjects);
+
+                audienceButtons.forEach(btn => btn.classList.remove('audience-card-active'));
+                document.getElementById(`audience-btn-${id}`).classList.add('audience-card-active');
+            }
+
+            audienceButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    updateAudienceDetails(button.id.split('-')[2]);
+                });
+            });
+
+            const tabContainer = document.getElementById('tab-content');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+
+            function updateTabContent(id) {
+                const data = pillarData[id];
+                activePillarTitle = data.title;
+                let html = `<h3 class="text-2xl font-bold mb-4 text-[#2A3D45]">${data.title}</h3>`;
+                html += '<div class="grid md:grid-cols-2 gap-6">';
+                data.themes.forEach(theme => {
+                    html += `<div><h4 class="font-semibold text-lg mb-2 text-gray-800">${theme.title}</h4><ul class="list-disc list-inside space-y-1 text-gray-600">`;
+                    theme.points.forEach(point => {
+                        html += `<li>${point}</li>`;
+                    });
+                    html += '</ul></div>';
+                });
+                html += '</div>';
+                tabContainer.innerHTML = html;
+
+                tabButtons.forEach(btn => btn.classList.remove('tab-active'));
+                document.querySelector(`.tab-btn[data-tab='${id}']`).classList.add('tab-active');
+            }
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    updateTabContent(button.dataset.tab);
+                });
+            });
+
+            const generateContentBtn = document.getElementById('generate-content-btn');
+            const contentIdeasOutput = document.getElementById('content-ideas-output');
+
+            generateContentBtn.addEventListener('click', async () => {
+                const prompt = `Based on the content pillar "${activePillarTitle}" for a luxury real estate company in Dubai, generate 5 creative and engaging content ideas. These could be blog post titles, video concepts, or social media campaign ideas. Format the response as a simple list.`;
+                const ideas = await callGeminiAPI(prompt);
+                contentIdeasOutput.innerHTML = ideas.replace(/\n/g, '<br>');
+                contentIdeasOutput.classList.remove('hidden');
+            });
+
+            async function handleGenerateSubjects() {
+                const prompt = `You are an expert real estate marketing copywriter. For the Dubai luxury property market, generate 5 compelling and click-worthy email subject lines targeted at the following persona:
+                - Persona: ${activeAudienceData.title}
+                - Interests: ${activeAudienceData.details.find(d => d.label === 'Interests').value}
+                - Pain Points: ${activeAudienceData.details.find(d => d.label === 'Pain Points').value}
+                The subject lines should be concise, intriguing, and evoke a sense of exclusivity. Format the response as a numbered list.`;
+                const subjects = await callGeminiAPI(prompt);
+                const outputDiv = document.getElementById('subject-lines-output');
+                outputDiv.innerHTML = subjects.replace(/\n/g, '<br>');
+                outputDiv.classList.remove('hidden');
+            }
+
+            const timelineDetailsContainer = document.getElementById('timeline-details');
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            
+            function updateTimelineDetails(id) {
+                const data = timelineData[id];
+                let html = `<h4 class="font-bold text-xl mb-3 text-[#2A3D45]">${data.title}</h4>`;
+                html += '<ul class="list-disc list-inside space-y-2 text-gray-600">';
+                data.points.forEach(point => {
+                    html += `<li>${point}</li>`;
+                });
+                html += '</ul>';
+                timelineDetailsContainer.innerHTML = html;
+
+                timelineItems.forEach(item => item.classList.remove('timeline-item-active'));
+                document.getElementById(`timeline-item-${id}`).classList.add('timeline-item-active');
+            }
+
+            timelineItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    updateTimelineDetails(item.id.split('-')[2]);
+                });
+            });
+            
+            const ctx = document.getElementById('contentMixChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Written Content', 'Visual Content', 'Interactive Content', 'Video Content'],
+                    datasets: [{
+                        label: 'Content Mix',
+                        data: [40, 30, 15, 15],
+                        backgroundColor: [
+                            'rgba(42, 61, 69, 0.8)',
+                            'rgba(212, 175, 55, 0.8)',
+                            'rgba(107, 114, 128, 0.8)',
+                            'rgba(156, 163, 175, 0.8)'
+                        ],
+                        borderColor: [
+                            '#2A3D45',
+                            '#D4AF37',
+                            '#6B7280',
+                            '#9CA3AF'
+                        ],
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                             labels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Inter', sans-serif"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            updateAudienceDetails('1');
+            updateTabContent('1');
+            updateTimelineDetails('1');
+        });
+    </script>
+</body>
+</html>
