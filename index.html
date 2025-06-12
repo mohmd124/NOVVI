@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novvi Properties | Content Strategy Dashboard</title>
+    <title>Novvi Properties | AI-Powered Content Strategy Dashboard</title>
     <!-- Chosen Palette: Warm Neutrals with Gold Accent -->
-    <!-- Application Structure Plan: A dashboard-style SPA. The structure begins with high-level objectives, then allows interactive exploration of target audiences through a selector. The core content strategy is organized into clean, clickable tabs for each pillar. A doughnut chart visualizes the content mix, and an interactive timeline presents the 6-month roadmap. New sections for SOP and Hub Architecture are added to provide operational detail. This structure was chosen to transform a static document into an engaging, explorable tool. It allows users (management) to get a quick overview and then dive into specific areas of interest (like a particular audience or content pillar) without linear scrolling, making the complex strategy more digestible and memorable. -->
+    <!-- Application Structure Plan: A dashboard-style SPA. The structure begins with high-level objectives, then allows interactive exploration of target audiences through a selector. The core content strategy is organized into clean, clickable tabs for each pillar. A doughnut chart visualizes the content mix, and an interactive timeline presents the 6-month roadmap. New sections for SOP and Hub Architecture are added to provide operational detail. Gemini API features are added to generate content ideas and email subjects, making the dashboard an actionable tool. -->
     <!-- Visualization & Content Choices: 
-        - Report Info: Target Audiences -> Goal: Compare/Inform -> Viz: Interactive Card Selector -> Interaction: Click a card to show details -> Justification: More engaging than a static list, highlights tailored approach -> Library: JS.
-        - Report Info: Content Pillars -> Goal: Organize -> Viz: Tabbed Interface -> Interaction: Click a tab to reveal themes -> Justification: Organizes dense information cleanly -> Library: JS.
+        - Report Info: Target Audiences -> Goal: Compare/Inform -> Viz: Interactive Card Selector -> Interaction: Click a card to show details + "Generate Email Subjects" button -> Justification: More engaging than a static list, highlights tailored approach, adds AI utility -> Library: JS, Gemini API.
+        - Report Info: Content Pillars -> Goal: Organize -> Viz: Tabbed Interface -> Interaction: Click a tab to reveal themes + "Generate Content Ideas" button -> Justification: Organizes dense information cleanly, adds AI brainstorming -> Library: JS, Gemini API.
         - Report Info: Content Formats -> Goal: Inform Proportions -> Viz: Doughnut Chart -> Interaction: Hover to see details -> Justification: Quick visual summary of the content mix -> Library: Chart.js (Canvas).
         - Report Info: Hub Structure Diagram -> Goal: Organize -> Viz: HTML/CSS Diagram -> Interaction: Static Visual -> Justification: Translates a flowchart into a clean, web-native format -> Library: HTML/CSS.
         - Report Info: SOP Document -> Goal: Organize -> Viz: Accordion Interface -> Interaction: Click to expand/collapse -> Justification: Presents dense procedural text in a manageable, non-overwhelming way -> Library: JS.
@@ -93,15 +93,55 @@
             height: 2px;
             background-color: #e5e7eb;
         }
+        .gemini-btn {
+            background-color: #2A3D45;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .gemini-btn:hover {
+            background-color: #D4AF37;
+        }
+        .gemini-btn:disabled {
+            background-color: #9CA3AF;
+            cursor: not-allowed;
+        }
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #D4AF37;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-[#FBF9F6] text-[#333]">
+
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+    </div>
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8">
         
         <header class="text-center mb-12">
             <h1 class="font-playfair text-4xl md:text-5xl font-bold text-[#2A3D45]">Novvi Properties</h1>
-            <p class="mt-2 text-lg text-[#6B7280]">Interactive Content Marketing Strategy</p>
+            <p class="mt-2 text-lg text-[#6B7280]">AI-Powered Content Strategy Dashboard</p>
         </header>
 
         <main>
@@ -163,8 +203,7 @@
                         </div>
                     </div>
                     <div class="lg:w-2/3 bg-white p-6 rounded-lg shadow-lg">
-                        <div id="audience-details">
-                        </div>
+                        <div id="audience-details"></div>
                     </div>
                 </div>
             </section>
@@ -178,8 +217,14 @@
                     <button class="tab-btn py-2 px-6 font-semibold text-gray-500 border-b-4 border-transparent transition-colors duration-300" data-tab="3">Investor Resources</button>
                     <button class="tab-btn py-2 px-6 font-semibold text-gray-500 border-b-4 border-transparent transition-colors duration-300" data-tab="4">Buyer Guides</button>
                 </div>
-                <div id="tab-content" class="bg-white p-6 rounded-lg shadow-md min-h-[250px]">
-                </div>
+                <div id="tab-content" class="bg-white p-6 rounded-lg shadow-md min-h-[250px]"></div>
+            </section>
+            
+            <section id="gemini-content-generator" class="mb-16 text-center">
+                <h2 class="font-playfair text-3xl text-center mb-2 font-bold">AI Content Idea Generator</h2>
+                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Spark your creativity. Based on the selected content pillar above, use our AI assistant to generate fresh content ideas, blog post titles, and angles to explore.</p>
+                <button id="generate-content-btn" class="gemini-btn font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300">✨ Generate Content Ideas</button>
+                <div id="content-ideas-output" class="mt-8 p-6 bg-white rounded-lg shadow-md text-left hidden"></div>
             </section>
 
             <section id="content-mix" class="mb-16">
@@ -612,4 +657,4 @@
         });
     </script>
 </body>
-</html>
+</ht
